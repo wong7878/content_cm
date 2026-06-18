@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corrective Maintenance - Select Checklist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header h2 span {
+            font-weight: 400;
+            opacity: 0.8;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+
+        .checklist-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .checklist-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .checklist-card.track-circuit {
+            border-top-color: #f59e0b;
+        }
+
+        .checklist-card.track-circuit:hover {
+            border-color: #f59e0b;
+        }
+
+        .checklist-card.wireless-radio {
+            border-top-color: #3b82f6;
+        }
+
+        .checklist-card.wireless-radio:hover {
+            border-color: #3b82f6;
+        }
+
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .card-category {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .track-circuit .card-category {
+            color: #f59e0b;
+        }
+
+        .wireless-radio .card-category {
+            color: #3b82f6;
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .card-description {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .arrow {
+            float: right;
+            font-size: 20px;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 600px) {
+            .header h2 {
+                font-size: 24px;
+            }
+            
+            .card-title {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Corrective Maintenance</h1>
+            <h2><span>Select a</span> checklist</h2>
+            <p>Choose the inspection type to begin</p>
+        </div>
+
+        <a href="https://srtc-cm-checklist.netlify.app/" class="checklist-card track-circuit" target="_blank" rel="noopener noreferrer">
+            <span class="arrow">→</span>
+            <div class="card-icon">🛤️</div>
+            <div class="card-category">Track Circuit</div>
+            <div class="card-title">SRTC Track Circuit Inspection</div>
+            <div class="card-description">
+                IRJ alignment checks, signal & traction bond verification, TFU/TCU equipment tests, and SER CTF measurements.
+            </div>
+            <div class="tags">
+                <span class="tag">IRJ</span>
+                <span class="tag">Signal Bonds</span>
+                <span class="tag">TFU / TCU</span>
+                <span class="tag">R2R</span>
+            </div>
+        </a>
+
+        <a href="https://wru-cm.netlify.app/" class="checklist-card wireless-radio" target="_blank" rel="noopener noreferrer">
+            <span class="arrow">→</span>
+            <div class="card-icon">📡</div>
+            <div class="card-category">Wireless Radio Unit</div>
+            <div class="card-title">WRU CM Check List</div>
+            <div class="card-description">
+                Power level, VSWR, antenna cable diagnostics, distance-to-fault measurement, and technician sign-off.
+            </div>
+            <div class="tags">
+                <span class="tag">VSWR</span>
+                <span class="tag">FieldFox</span>
+                <span class="tag">DTF</span>
+                <span class="tag">BPF / Splitter</span>
+            </div>
+        </a>
+    </div>
+</body>
+</html>
