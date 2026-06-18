@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SRTC Track Circuit Inspection</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5; padding: 10px; line-height: 1.4; font-size: 14px;
+        }
+        .container {
+            max-width: 600px; margin: 0 auto; background: white;
+            border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { font-size: 20px; color: #1a1a1a; margin-bottom: 15px; text-align: center; }
+        
+        .section {
+            margin-bottom: 20px; background: #fafafa; border-radius: 6px;
+            padding: 12px; break-inside: avoid;
+        }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .section-title {
+            font-size: 16px; font-weight: 600; color: #2c3e50;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-title::before {
+            content: ''; width: 4px; height: 18px; background: #3498db; border-radius: 2px;
+        }
+        .status-badge {
+            font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 4px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .status-pass { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-fail { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status-incomplete { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+        .checklist-item {
+            display: flex; align-items: flex-start; margin-bottom: 8px; padding: 8px;
+            background: white; border-radius: 4px; border: 1px solid #e0e0e0; break-inside: avoid;
+        }
+        .checklist-item input[type="checkbox"] {
+            margin-right: 10px; margin-top: 3px; width: 18px; height: 18px;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .checklist-item label { font-size: 14px; color: #333; cursor: pointer; flex: 1; }
+        .irj-item { background: #e3f2fd; border-left: 3px solid #2196f3; }        .note { font-size: 12px; color: #666; font-style: italic; margin-top: 4px; margin-bottom: 8px; }
+        
+        .result-section {
+            background: #fff3cd; border: 2px solid #ffc107;
+            border-radius: 6px; padding: 12px; margin-top: 15px;
+        }
+        .result-title { font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #856404; }
+        .radio-group { display: flex; gap: 15px; flex-wrap: wrap; }
+        .radio-group label { display: flex; align-items: center; gap: 5px; font-size: 14px; cursor: pointer; }
+        
+        .signature-section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #e0e0e0; }
+        .input-field {
+            width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd;
+            border-radius: 4px; font-size: 14px;
+        }
+        .textarea-field {
+            width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd;
+            border-radius: 4px; font-size: 14px; font-family: inherit;
+            resize: vertical; min-height: 60px;
+        }
+        .btn {
+            width: 100%; padding: 12px; background: #3498db; color: white;
+            border: none; border-radius: 6px; font-size: 16px; font-weight: 600;
+            cursor: pointer; margin-top: 10px;
+        }
+        .btn:hover { background: #2980b9; }
+        .btn-secondary { background: #95a5a6; margin-top: 8px; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .btn-camera { background: #27ae60; margin-top: 8px; }
+        .btn-camera:hover { background: #229954; }
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+        
+        .progress-bar {
+            background: #e0e0e0; border-radius: 10px; height: 20px;
+            margin-bottom: 15px; overflow: hidden;
+        }
+        .progress-fill {
+            background: #4caf50; height: 100%; width: 0%; transition: width 0.3s ease;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 12px; font-weight: 600;
+        }
+        .camera-section {
+            background: #e8f5e9; border: 2px dashed #4caf50;
+            border-radius: 6px; padding: 12px; margin-bottom: 15px;
+        }
+        .photo-gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .photo-item {
+            position: relative; border-radius: 4px; overflow: hidden;
+            border: 2px solid #ddd; break-inside: avoid;        }
+        .photo-item img { width: 100%; height: 150px; object-fit: cover; display: block; }
+        .photo-delete {
+            position: absolute; top: 5px; right: 5px; background: rgba(231, 76, 60, 0.9);
+            color: white; border: none; border-radius: 50%; width: 28px; height: 28px;
+            cursor: pointer; font-size: 16px; line-height: 1;
+        }
+        .photo-timestamp {
+            position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7);
+            color: white; font-size: 11px; padding: 3px; text-align: center;
+        }
+        .remark-section {
+            background: #fff8e1; border-left: 4px solid #ffc107;
+            padding: 10px; margin-top: 10px; border-radius: 4px;
+        }
+        .remark-label { font-weight: 600; font-size: 14px; color: #f57c00; margin-bottom: 5px; }
+        .hidden { display: none !important; }
+
+        /* --- PRINT STYLES FOR LARGER FONT & FILENAME --- */
+        @media print {
+            body { 
+                background: white; padding: 0; 
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+                font-size: 16px !important; line-height: 1.5 !important;
+            }
+            .container { box-shadow: none; max-width: 100%; padding: 10px; }
+            .section-title { font-size: 18px !important; }
+            .checklist-item label { font-size: 15px !important; }
+            .input-field, .textarea-field { font-size: 15px !important; padding: 10px !important; }
+            .btn, .photo-delete, input[type="file"] { display: none !important; }
+            .camera-section { border: 1px solid #ccc; background: transparent !important; padding: 10px; margin-bottom: 15px; display: block !important; }
+            .photo-gallery { display: grid !important; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+            .photo-item { border: 1px solid #999; break-inside: avoid; }
+            .photo-item img { display: block !important; width: 100%; height: auto; max-height: 200px; object-fit: cover; }
+            .photo-timestamp { background: rgba(0,0,0,0.7) !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .remark-section, .result-section, .irj-item, .status-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 SRTC Track Circuit Inspection</h1>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar">0%</div>
+        </div>
+        
+        <!-- Photo Documentation Section -->
+        <div class="camera-section">
+            <div class="section-title">📷 Photo Documentation</div>            <input type="file" id="photoUpload" accept="image/*" multiple class="hidden" onchange="handlePhotoUpload(event)">
+            <button class="btn btn-camera" onclick="document.getElementById('photoUpload').click()">📁 Select / Take Photos</button>
+            <div class="note">Select existing photos or take a new one using your device.</div>
+            <div class="photo-gallery" id="photoGallery"></div>
+        </div>
+        
+        <!-- Section 1: IRJ -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">📍 Insulated Rail Joints (IRJ) - Total: 7</div>
+                <span id="statusIRJ" class="status-badge status-incomplete">⚠️ INCOMPLETE</span>
+            </div>
+            <div class="note">Check Position ±0.35m & Opposing Alignment ±50mm for each</div>
+            <div id="irjList"></div>
+            <div class="remark-section">
+                <div class="remark-label">📝 Remarks - IRJ:</div>
+                <textarea class="textarea-field" id="remarkIRJ" placeholder="Enter any observations or issues..." oninput="updateSectionStatuses()"></textarea>
+            </div>
+        </div>
+        
+        <!-- Section 2: Signal Bonds -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">⚡ Signal Bonds (J)</div>
+                <span id="statusSignal" class="status-badge status-incomplete">⚠️ INCOMPLETE</span>
+            </div>
+            <div class="note">Verify at all 7 IRJ locations</div>
+            <div class="checklist-item">
+                <input type="checkbox" id="sb1" onchange="updateSectionStatuses()">
+                <label for="sb1">Bonds installed across all 7 IRJ gaps</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="sb2" onchange="updateSectionStatuses()">
+                <label for="sb2">All bond clamps/terminations are tight and secure</label>
+            </div>
+            <div class="remark-section">
+                <div class="remark-label">📝 Remarks - Signal Bonds:</div>
+                <textarea class="textarea-field" id="remarkSignalBonds" placeholder="Enter any observations or issues..." oninput="updateSectionStatuses()"></textarea>
+            </div>
+        </div>
+        
+        <!-- Section 3: Traction Bonds -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">🔌 Traction Bonds (T)</div>
+                <span id="statusTraction" class="status-badge status-incomplete">⚠️ INCOMPLETE</span>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="tb1" onchange="updateSectionStatuses()">
+                <label for="tb1">Traction Bonds present on running rails (Installed by Traction team)</label>            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="tb2" onchange="updateSectionStatuses()">
+                <label for="tb2">Traction Bonds do not physically interfere with Signal Bonds</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="tb3" onchange="updateSectionStatuses()">
+                <label for="tb3">No loose strands or damaged cables</label>
+            </div>
+            <div class="remark-section">
+                <div class="remark-label">📝 Remarks - Traction Bonds:</div>
+                <textarea class="textarea-field" id="remarkTractionBonds" placeholder="Enter any observations or issues..." oninput="updateSectionStatuses()"></textarea>
+            </div>
+        </div>
+        
+        <!-- Section 4: Track Equipment -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">🚦 Track Equipment</div>
+                <span id="statusEquipment" class="status-badge status-incomplete">⚠️ INCOMPLETE</span>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="te1" onchange="updateSectionStatuses()">
+                <label for="te1">TFU installed, check all bolts & nuts are tightened</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="te2" onchange="updateSectionStatuses()">
+                <label for="te2">TCU installed, check all bolts & nuts are tightened</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="te3" onchange="updateSectionStatuses()">
+                <label for="te3">Cables routed safely from units to rail connections</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="te4" onchange="updateSectionStatuses()">
+                <label for="te4">Equipment boxes securely mounted and closed</label>
+            </div>
+            
+            <!-- Test 1: TFU & TCU cable readings (BEFORE / AFTER) -->
+            <div class="checklist-item" style="background: #fff3cd; border-left: 3px solid #ffc107; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; width: 100%; margin-bottom: 8px;">
+                    <input type="checkbox" id="te5" onchange="updateSectionStatuses()" style="margin-right: 10px; margin-top: 0;">
+                    <label for="te5" style="flex: 1; font-weight: 600;"><strong>Test 1:</strong> Check TFU & TCU cable readings in Vac</label>
+                </div>
+                <div style="padding-left: 28px; width: 100%; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; align-items: end;">
+                    <div style="font-size: 11px; font-weight: 700; color: #666; padding-bottom: 4px;">Measurement Point</div>
+                    <div style="font-size: 11px; font-weight: 700; color: #666; padding-bottom: 4px; text-align: center;">Before</div>
+                    <div style="font-size: 11px; font-weight: 700; color: #666; padding-bottom: 4px; text-align: center;">After</div>
+                    
+                    <label style="font-size: 12px; font-weight: 600; display: flex; align-items: center;">TFU T1/T2 (Vac):</label>                    <input type="number" step="0.01" class="input-field" id="tfuT1T2_before" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    <input type="number" step="0.01" class="input-field" id="tfuT1T2_after" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    
+                    <label style="font-size: 12px; font-weight: 600; display: flex; align-items: center;">TFU T3/T4 (Vac):</label>
+                    <input type="number" step="0.01" class="input-field" id="tfuT3T4_before" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    <input type="number" step="0.01" class="input-field" id="tfuT3T4_after" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    
+                    <label style="font-size: 12px; font-weight: 600; display: flex; align-items: center;">TCU T1/T2 (Vac):</label>
+                    <input type="number" step="0.01" class="input-field" id="tcuT1T2_before" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    <input type="number" step="0.01" class="input-field" id="tcuT1T2_after" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    
+                    <label style="font-size: 12px; font-weight: 600; display: flex; align-items: center;">TCU T3/T4 (Vac):</label>
+                    <input type="number" step="0.01" class="input-field" id="tcuT3T4_before" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    <input type="number" step="0.01" class="input-field" id="tcuT3T4_after" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                </div>
+            </div>
+            
+            <!-- Test 2: SER CTF measurement (BEFORE / AFTER) -->
+            <div class="checklist-item" style="background: #fff3cd; border-left: 3px solid #ffc107; flex-wrap: wrap; margin-top: 10px;">
+                <div style="display: flex; align-items: center; width: 100%; margin-bottom: 8px;">
+                    <input type="checkbox" id="te6" onchange="updateSectionStatuses()" style="margin-right: 10px; margin-top: 0;">
+                    <label for="te6" style="flex: 1; font-weight: 600;"><strong>Test 2:</strong> SER CTF measurement</label>
+                </div>
+                <div style="padding-left: 28px; width: 100%; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; align-items: end;">
+                    <div style="font-size: 11px; font-weight: 700; color: #666; padding-bottom: 4px;">Measurement Point</div>
+                    <div style="font-size: 11px; font-weight: 700; color: #666; padding-bottom: 4px; text-align: center;">Before</div>
+                    <div style="font-size: 11px; font-weight: 700; color: #666; padding-bottom: 4px; text-align: center;">After</div>
+                    
+                    <label style="font-size: 12px; font-weight: 600; display: flex; align-items: center;">TFU Output Voltage AC:</label>
+                    <input type="number" step="0.01" class="input-field" id="serTfuOut_before" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    <input type="number" step="0.01" class="input-field" id="serTfuOut_after" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    
+                    <label style="font-size: 12px; font-weight: 600; display: flex; align-items: center;">TCU Input Voltage AC:</label>
+                    <input type="number" step="0.01" class="input-field" id="serTcuIn_before" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    <input type="number" step="0.01" class="input-field" id="serTcuIn_after" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    
+                    <label style="font-size: 12px; font-weight: 600; display: flex; align-items: center;">Relay Output Voltage DC:</label>
+                    <input type="number" step="0.01" class="input-field" id="serRelayOut_before" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    <input type="number" step="0.01" class="input-field" id="serRelayOut_after" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    
+                    <label style="font-size: 12px; font-weight: 600; display: flex; align-items: center;">MPV Voltage AC:</label>
+                    <input type="number" step="0.01" class="input-field" id="serMpv_before" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                    <input type="number" step="0.01" class="input-field" id="serMpv_after" placeholder="0.00" style="margin-bottom: 0; padding: 6px; font-size: 13px; text-align: center;" oninput="updateSectionStatuses()">
+                </div>
+            </div>
+
+            <!-- R2R Voltage Troubleshooting Text Box -->
+            <div class="checklist-item" style="background: #f1f3f5; border-left: 3px solid #495057; flex-wrap: wrap; margin-top: 10px;">
+                <div style="display: flex; align-items: center; width: 100%; margin-bottom: 8px;">
+                    <input type="checkbox" id="te_r2r" onchange="updateSectionStatuses()" style="margin-right: 10px; margin-top: 0;">                    <label for="te_r2r" style="flex: 1; font-weight: 600; color: #212529;">R2R Voltage Troubleshooting Steps Reviewed / Performed</label>
+                </div>
+                <div style="padding-left: 28px; width: 100%; background: #ffffff; padding: 12px; border-radius: 4px; border: 1px solid #ced4da;">
+                    <ol style="margin: 0 0 10px 0; padding-left: 20px; font-size: 13px; color: #333; line-height: 1.6;">
+                        <li>R2R voltage must be more than 3Vac. If less than half voltage of healthy voltage, look for IRJ shorted.</li>
+                        <li>R2R 0 voltage. Go to step 3.</li>
+                        <li>Remove TFU and TCU track cable and measure TCU cable for 0 ohms.</li>
+                        <li>Look for any panel clip shorted.</li>
+                    </ol>
+                    <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px; color: #495057;">Troubleshooting Remarks:</label>
+                    <textarea class="textarea-field" id="remarkR2R" placeholder="Enter findings or actions taken..." style="margin-bottom: 0; min-height: 50px;" oninput="updateSectionStatuses()"></textarea>
+                </div>
+            </div>
+            
+            <div class="remark-section">
+                <div class="remark-label">📝 Remarks - Track Equipment:</div>
+                <textarea class="textarea-field" id="remarkEquipment" placeholder="Enter any observations or issues..." oninput="updateSectionStatuses()"></textarea>
+            </div>
+        </div>
+        
+        <!-- Section 5: General -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">🧹 General / Housekeeping</div>
+                <span id="statusGeneral" class="status-badge status-incomplete">⚠️ INCOMPLETE</span>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="gh1" onchange="updateSectionStatuses()">
+                <label for="gh1">No tools or debris left on track</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="gh2" onchange="updateSectionStatuses()">
+                <label for="gh2">All cable hooks/clips secured to parapet wall</label>
+            </div>
+            <div class="remark-section">
+                <div class="remark-label">📝 Remarks - General:</div>
+                <textarea class="textarea-field" id="remarkGeneral" placeholder="Enter any observations or issues..." oninput="updateSectionStatuses()"></textarea>
+            </div>
+        </div>
+        
+        <!-- Overall Remarks -->
+        <div class="section">
+            <div class="section-title">📋 Overall Remarks</div>
+            <textarea class="textarea-field" id="overallRemark" placeholder="Enter overall inspection notes, findings, or recommendations..." style="min-height: 100px;"></textarea>
+        </div>
+        
+        <!-- Result Section -->
+        <div class="result-section">
+            <div class="result-title">Inspection Result (Auto-evaluated, can be overridden):</div>
+            <div class="radio-group">                <label><input type="radio" name="result" value="PASS" onchange="updateSectionStatuses()"> ✅ PASS</label>
+                <label><input type="radio" name="result" value="FAIL" onchange="updateSectionStatuses()"> ❌ FAIL</label>
+                <label><input type="radio" name="result" value="N/A" onchange="updateSectionStatuses()"> ⚠️ N/A</label>
+            </div>
+        </div>
+        
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <input type="text" class="input-field" placeholder="Inspector Name" id="inspectorName">
+            <input type="date" class="input-field" id="inspectionDate">
+            <input type="text" class="input-field" placeholder="Location/Site Reference" id="locationRef">
+            
+            <button class="btn" onclick="saveChecklist()">💾 Save Checklist (Local)</button>
+            <button class="btn btn-secondary" onclick="exportPDF()">📄 Export PDF</button>
+            <button class="btn btn-danger" onclick="resetChecklist()">🔄 Reset All</button>
+        </div>
+    </div>
+    
+    <script>
+        let photos = [];
+        
+        // Generate 7 IRJ items
+        const irjList = document.getElementById('irjList');
+        for (let i = 1; i <= 7; i++) {
+            const irjDiv = document.createElement('div');
+            irjDiv.className = 'checklist-item irj-item';
+            irjDiv.innerHTML = `
+                <input type="checkbox" id="irj${i}" onchange="updateSectionStatuses()">
+                <label for="irj${i}"><strong>IRJ ${i}:</strong> Position correct | Opposing aligned | Gap clean/seated</label>
+            `;
+            irjList.appendChild(irjDiv);
+        }
+        
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+            const percentage = Math.round((checked.length / checkboxes.length) * 100);
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage + '%';
+            progressBar.style.background = percentage === 100 ? '#4caf50' : (percentage >= 50 ? '#ff9800' : '#f44336');
+        }
+
+        // --- CORE PASS/FAIL LOGIC ---
+        function updateSectionStatuses() {
+            updateProgress();
+            
+            const setBadge = (id, isPass, isFail) => {
+                const el = document.getElementById(id);
+                el.className = 'status-badge ' + (isFail ? 'status-fail' : (isPass ? 'status-pass' : 'status-incomplete'));                el.textContent = isFail ? '❌ FAIL' : (isPass ? '✅ PASS' : '⚠️ INCOMPLETE');
+            };
+
+            // 1. IRJ Status
+            let irjIncomplete = false;
+            for (let i = 1; i <= 7; i++) {
+                if (!document.getElementById(`irj${i}`).checked) irjIncomplete = true;
+            }
+            setBadge('statusIRJ', !irjIncomplete, false);
+
+            // 2. Signal Bonds Status
+            const sb1 = document.getElementById('sb1').checked;
+            const sb2 = document.getElementById('sb2').checked;
+            setBadge('statusSignal', sb1 && sb2, false);
+
+            // 3. Traction Bonds Status
+            const tb1 = document.getElementById('tb1').checked;
+            const tb2 = document.getElementById('tb2').checked;
+            const tb3 = document.getElementById('tb3').checked;
+            setBadge('statusTraction', tb1 && tb2 && tb3, false);
+
+            // 4. Track Equipment Status
+            const te1 = document.getElementById('te1').checked;
+            const te2 = document.getElementById('te2').checked;
+            const te3 = document.getElementById('te3').checked;
+            const te4 = document.getElementById('te4').checked;
+            const te5 = document.getElementById('te5').checked;
+            const te6 = document.getElementById('te6').checked;
+            const te_r2r = document.getElementById('te_r2r').checked;
+            
+            // Test 1 Values
+            const t1_fields = ['tfuT1T2', 'tfuT3T4', 'tcuT1T2', 'tcuT3T4'];
+            let t1Complete = true;
+            t1_fields.forEach(prefix => {
+                if (!document.getElementById(prefix + '_before').value || !document.getElementById(prefix + '_after').value) {
+                    t1Complete = false;
+                }
+            });
+
+            // Test 2 Values
+            const t2_fields = ['serTfuOut', 'serTcuIn', 'serRelayOut', 'serMpv'];
+            let t2Complete = true;
+            t2_fields.forEach(prefix => {
+                if (!document.getElementById(prefix + '_before').value || !document.getElementById(prefix + '_after').value) {
+                    t2Complete = false;
+                }
+            });
+            
+            let eqIncomplete = !(te1 && te2 && te3 && te4 && te5 && te6 && te_r2r && t1Complete && t2Complete);
+            let eqFail = false; 
+            setBadge('statusEquipment', !eqIncomplete && !eqFail, eqFail);
+
+            // 5. General Status
+            const gh1 = document.getElementById('gh1').checked;
+            const gh2 = document.getElementById('gh2').checked;
+            setBadge('statusGeneral', gh1 && gh2, false);
+
+            // 6. Auto-evaluate Overall Result
+            const allPass = !irjIncomplete && sb1 && sb2 && tb1 && tb2 && tb3 && !eqIncomplete && !eqFail && gh1 && gh2;
+            const anyFail = eqFail; 
+            
+            if (anyFail) {
+                document.querySelector('input[name="result"][value="FAIL"]').checked = true;
+            } else if (allPass) {
+                document.querySelector('input[name="result"][value="PASS"]').checked = true;
+            }
+        }
+        
+        function handlePhotoUpload(event) {
+            const files = event.target.files;
+            if (!files.length) return;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1200, MAX_HEIGHT = 1200;
+                        let width = img.width, height = img.height;
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        photos.push({ data: canvas.toDataURL('image/jpeg', 0.7), timestamp: new Date().toLocaleString() });
+                        displayPhotos();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+            event.target.value = '';
+        }
+        
+        function displayPhotos() {
+            const gallery = document.getElementById('photoGallery');            gallery.innerHTML = '';
+            photos.forEach((photo, index) => {
+                const div = document.createElement('div');
+                div.className = 'photo-item';
+                div.innerHTML = `
+                    <img src="${photo.data}" alt="Photo ${index + 1}">
+                    <button class="photo-delete" onclick="deletePhoto(${index})">×</button>
+                    <div class="photo-timestamp">${photo.timestamp}</div>
+                `;
+                gallery.appendChild(div);
+            });
+        }
+        
+        function deletePhoto(index) {
+            if (confirm('Delete this photo?')) {
+                photos.splice(index, 1);
+                displayPhotos();
+            }
+        }
+        
+        function gatherData() {
+            const data = {};
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => data[cb.id] = cb.checked);
+            document.querySelectorAll('input[type="radio"]').forEach(radio => { if (radio.checked) data[radio.name] = radio.value; });
+            
+            const textFields = [
+                'inspectorName', 'inspectionDate', 'locationRef', 'remarkIRJ', 'remarkSignalBonds', 
+                'remarkTractionBonds', 'remarkEquipment', 'remarkGeneral', 'overallRemark', 'remarkR2R',
+                'tfuT1T2_before', 'tfuT1T2_after', 'tfuT3T4_before', 'tfuT3T4_after',
+                'tcuT1T2_before', 'tcuT1T2_after', 'tcuT3T4_before', 'tcuT3T4_after',
+                'serTfuOut_before', 'serTfuOut_after', 'serTcuIn_before', 'serTcuIn_after',
+                'serRelayOut_before', 'serRelayOut_after', 'serMpv_before', 'serMpv_after'
+            ];
+            
+            textFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) data[id] = el.value;
+            });
+            data.photos = photos;
+            return data;
+        }
+        
+        function populateForm(data) {
+            Object.keys(data).forEach(key => {
+                if (key === 'result') {
+                    const radio = document.querySelector(`input[name="result"][value="${data[key]}"]`);
+                    if (radio) radio.checked = true;
+                } else if (key === 'photos') {
+                    photos = data[key] || [];
+                    displayPhotos();                } else {
+                    const el = document.getElementById(key);
+                    if (el) el.value = data[key];
+                }
+            });
+            updateSectionStatuses();
+        }
+        
+        function saveChecklist() {
+            try {
+                localStorage.setItem('trackCircuit_checklist', JSON.stringify(gatherData()));
+                alert('Checklist saved successfully to device memory!');
+            } catch (e) {
+                alert(e.name === 'QuotaExceededError' ? 'Storage limit reached! Please delete photos.' : 'Error saving: ' + e.message);
+            }
+        }
+        
+        function loadChecklist() {
+            const saved = localStorage.getItem('trackCircuit_checklist');
+            if (saved) {
+                try { populateForm(JSON.parse(saved)); } 
+                catch (e) { console.error('Error loading saved data:', e); }
+            } else {
+                updateSectionStatuses();
+            }
+        }
+        
+        function exportPDF() {
+            const now = new Date();
+            const dd = String(now.getDate()).padStart(2, '0');
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const yy = String(now.getFullYear()).slice(-2);
+            
+            const originalTitle = document.title;
+            document.title = `SRTC_inspect_${dd}${mm}${yy}`;
+            window.print();
+            setTimeout(() => { document.title = originalTitle; }, 1000);
+        }
+        
+        function resetChecklist() {
+            if (confirm('Are you sure you want to reset all checkboxes, remarks, measurements, and photos?')) {
+                document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(el => el.checked = false);
+                
+                const textFields = [
+                    'inspectorName', 'inspectionDate', 'locationRef', 'remarkIRJ', 'remarkSignalBonds', 
+                    'remarkTractionBonds', 'remarkEquipment', 'remarkGeneral', 'overallRemark', 'remarkR2R',
+                    'tfuT1T2_before', 'tfuT1T2_after', 'tfuT3T4_before', 'tfuT3T4_after',
+                    'tcuT1T2_before', 'tcuT1T2_after', 'tcuT3T4_before', 'tcuT3T4_after',
+                    'serTfuOut_before', 'serTfuOut_after', 'serTcuIn_before', 'serTcuIn_after',
+                    'serRelayOut_before', 'serRelayOut_after', 'serMpv_before', 'serMpv_after'                ];
+                textFields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                
+                photos = [];
+                displayPhotos();
+                localStorage.removeItem('trackCircuit_checklist');
+                updateSectionStatuses();
+            }
+        }
+        
+        document.getElementById('inspectionDate').valueAsDate = new Date();
+        window.onload = loadChecklist;
+    </script>
+</body>
+</html>
